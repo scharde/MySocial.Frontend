@@ -1,35 +1,45 @@
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import SignIn from "./components/SingIn.tsx";
+import SignIn from "./components/sign-in/SignIn";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
+import PrivateRoute from "@/components/PrivateRoute";
+import Unauthorized from "@/components/Unauthorized";
+import Home from "@/Module/Dashboard/Home";
 
 function App() {
-  var handleLoginWithGoogle = () => {
-    window.location.href =
-      "https://localhost:7040/api/Auth/google-login?returnUrl=http://localhost:5174/logged-in";
-  };
-
   const router = createBrowserRouter([
     {
-      path: "/logged-in",
-      element: <div>Hello World</div>,
-    },
-    {
-      path: "/sign-in",
-      element: (
-        <button onClick={handleLoginWithGoogle}>Sign in with Google </button>
-      ),
+      path: "/unauthorized",
+      Component: Unauthorized,
     },
     {
       path: "/login",
-      element: <SignIn />,
+      Component: SignIn,
+    },
+    {
+      path: "/home",
+      element: (
+        <PrivateRoute>
+          <Home />
+        </PrivateRoute>
+      ),
     },
     {
       path: "/",
-      element: <>Home</>,
+      element: (
+        <PrivateRoute>
+          <Home />
+        </PrivateRoute>
+      ),
     },
   ]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  );
 }
 
 export default App;
