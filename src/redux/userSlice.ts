@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   initialUserState,
+  IUser,
   type IUserProfileResponse,
   UserLoggedInType,
 } from "@/model/User";
@@ -10,6 +11,7 @@ import {
   logoutAsync,
   refreshAsync,
 } from "@/services/AuthService";
+import { getUserAsync } from "@/services/userService.cs";
 
 export const checkAuthActionAsync = createAsyncThunk<IUserProfileResponse>(
   "auth/check-auth",
@@ -33,7 +35,6 @@ export const logoutActionAsync = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("Calling logout");
       await logoutAsync();
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -46,6 +47,17 @@ export const refreshTokenActionAsync = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await refreshAsync();
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
+  },
+);
+
+export const getUserActionAsync = createAsyncThunk<IUser>(
+  "user/getUserActionAsync",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getUserAsync();
     } catch (error: any) {
       return rejectWithValue(error.response.data);
     }
@@ -66,6 +78,16 @@ export const userSlice = createSlice({
       })
       .addCase(logoutActionAsync.fulfilled, (state) => {
         state.userLoggedInStatus = UserLoggedInType.No;
+      })
+      .addCase(getUserActionAsync.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getUserActionAsync.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.loading = false;
+      })
+      .addCase(getUserActionAsync.rejected, (state) => {
+        state.loading = false;
       });
   },
 });

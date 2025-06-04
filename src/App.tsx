@@ -6,6 +6,8 @@ import { store } from "./redux/store";
 import PrivateRoute from "@/components/PrivateRoute";
 import Unauthorized from "@/components/Unauthorized";
 import Home from "@/Module/Dashboard/Home";
+import SocialFeed from "@/Module/Feed/SocialFeed";
+import Layout from "@/Module/Layout";
 
 function App() {
   const router = createBrowserRouter([
@@ -20,16 +22,18 @@ function App() {
     {
       path: "/home",
       element: (
-        <PrivateRoute>
-          <Home />
-        </PrivateRoute>
+        <Layout>
+          <SocialFeed />
+        </Layout>
       ),
     },
     {
       path: "/",
       element: (
         <PrivateRoute>
-          <Home />
+          <Layout>
+            <SocialFeed />
+          </Layout>
         </PrivateRoute>
       ),
     },

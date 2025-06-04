@@ -1,5 +1,6 @@
 import httpService, { type CustomAxiosRequestConfig } from "./httpService";
-import { API_Post } from "@/Utils/constant.";
+import { API_Post, API_Post_Vote } from "@/Utils/constant.";
+import { Axios } from "axios";
 
 export interface ICreatePostRequest {
   content: string;
@@ -15,4 +16,8 @@ export const getPostAsync = async (page: number, pageSize: number = 10) => {
     `${API_Post}?page=${page}&pageSize=${pageSize}`,
   );
   return result.data;
+};
+
+export const postVotesAsync = async (postId: string, vote: number) => {
+  await httpService.post(API_Post_Vote, { postId: postId, vote: vote });
 };
