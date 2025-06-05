@@ -21,17 +21,18 @@ export interface IFeedPostResponse {
   upVotes: number;
   downVotes: number;
   createdDateUtc: Date;
-  timestamp: string;
   userVote: VoteType;
   userBookmarked: boolean;
 }
 
-export interface IGetFeedPostResponse {
+export interface PageResult<T> {
   totalCount: number;
   page: number;
   pageSize: number;
-  items: IFeedPostResponse[];
+  items: T[];
 }
+
+export interface IGetFeedPostResponse extends PageResult<IFeedPostResponse> {}
 
 export interface IFeedState {
   posts: IFeedPostResponse[];
@@ -52,3 +53,20 @@ export const initialFeedState: IFeedState = {
   pageSize: 10,
   hasMore: false,
 };
+
+export interface ICommentRequest {
+  postId: string;
+  parentCommentId: string;
+  content: string;
+}
+
+export interface ICommentResponse {
+  id: string;
+  author: IPostAuthor;
+  parentCommentId: string;
+  content: string;
+  score: number;
+  createdDateUtc: Date;
+}
+
+export interface ICommentPageResponse extends PageResult<ICommentResponse> {}

@@ -39,36 +39,11 @@ import {
   getPostActionAsync,
   updateVoteAction,
 } from "@/redux/feedSlice.";
-import { VoteType } from "@/model/Feed";
+import { ICommentRequest, ICommentResponse, VoteType } from "@/model/Feed";
 import { postVotesAsync } from "@/services/PostService";
-
-interface Post {
-  id: string;
-  author: {
-    id: string;
-    name: string;
-    title: string;
-    avatar: string;
-    isFollowing: boolean;
-  };
-  content: string;
-  timestamp: string;
-  upvotes: number;
-  downvotes: number;
-  comments: number;
-  userVote: "up" | "down" | null;
-  userBookmarked: boolean;
-}
-
-interface CommentType {
-  id: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  timestamp: string;
-}
+import { getCommentsAsync, postCommentsAsync } from "@/services/CommentService";
+import { formatDistanceToNow } from "date-fns";
+import { formatDateToNow } from "@/Utils/utils";
 
 export default function SocialFeed() {
   const [newPost, setNewPost] = useState("");
@@ -76,7 +51,7 @@ export default function SocialFeed() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [commentDialog, setCommentDialog] = useState<string | null>(null);
-  const [comments, setComments] = useState<CommentType[]>([]);
+  const [comments, setComments] = useState<ICommentResponse[]>([]);
   const [newComment, setNewComment] = useState("");
 
   const inputFeedRef = useRef<HTMLInputElement>(null);
@@ -133,34 +108,18 @@ export default function SocialFeed() {
 
   const handleOpenComments = async (postId: string) => {
     setCommentDialog(postId);
-    try {
-      const response = await axios.get(`/posts/${postId}/comments`);
-      setComments(response.data.comments);
-    } catch (error) {
-      console.error("Failed to fetch comments:", error);
-      // Mock comments
-      setComments([
-        {
-          id: "1",
-          author: {
-            name: "John Doe",
-            avatar: "/placeholder.svg?height=32&width=32",
-          },
-          content: "Great insight! Thanks for sharing.",
-          timestamp: "2h",
-        },
-      ]);
-    }
+    const response = await getCommentsAsync(postId, 1, 10);
+    setComments(response.items);
   };
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !commentDialog) return;
-
     try {
-      const response = await axios.post(`/posts/${commentDialog}/comments`, {
+      const response = await postCommentsAsync({
+        postId: commentDialog,
         content: newComment,
-      });
-      setComments([...comments, response.data.comment]);
+      } as ICommentRequest);
+      // setComments([...comments, response.data.comment]);
       setNewComment("");
     } catch (error) {
       console.error("Failed to add comment:", error);
@@ -234,7 +193,7 @@ export default function SocialFeed() {
                     {post.author.title}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {post.timestamp}
+                    {formatDateToNow(post.createdDateUtc)}
                   </Typography>
                 </Box>
               </Box>
@@ -397,7 +356,7 @@ export default function SocialFeed() {
                     color="text.secondary"
                     sx={{ ml: 1 }}
                   >
-                    {comment.timestamp}
+                    {formatDateToNow(comment.createdDateUtc)}
                   </Typography>
                 </Box>
               </Box>

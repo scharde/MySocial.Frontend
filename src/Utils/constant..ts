@@ -9,3 +9,4 @@ export const API_Check_Auth: string = "/api/auth/check-auth";
 export const API_Post: string = "/api/post";
 export const API_User: string = "/api/user";
 export const API_Post_Vote: string = "/api/post-vote";
+export const API_Comments: string = "/api/comments";

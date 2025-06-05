@@ -31,62 +31,37 @@ const axiosInstance: AxiosInstance = axios.create({
 });
 
 axiosInstance.defaults.withCredentials = true;
+let isLoggingOut = false;
 
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse): AxiosResponse => {
-    return response;
-  },
+  (response: AxiosResponse): AxiosResponse => response,
   async (error: AxiosError): Promise<any> => {
     const prevRequest: any = error.config;
 
-    console.log("Prev Request", prevRequest);
     if (
       error.response?.status === 401 &&
       !prevRequest?.sent &&
-      !prevRequest?.skipRefreshToken
+      !prevRequest?.skipRefreshToken &&
+      !isLoggingOut
     ) {
       prevRequest.sent = true;
+      isLoggingOut = true;
 
       try {
-        const result = await store.dispatch(refreshTokenActionAsync());
-        console.log("Refresh token Request", result.meta.requestStatus);
-        if (result.meta.requestStatus === "fulfilled") {
-          console.log("Trying prev request again");
-          return axiosInstance(prevRequest); // Retry original request
-        }
-
-        // If refresh failed
         await store.dispatch(logoutActionAsync());
         await store.dispatch({ type: "RESET" });
         window.location.href = "/login";
-        return Promise.reject(error);
       } catch (err) {
+        // Still logout, even if error occurs
         await store.dispatch(logoutActionAsync());
         await store.dispatch({ type: "RESET" });
         window.location.href = "/login";
-        return Promise.reject(err);
-      }
-    }
-
-    // If it's already retried, or skipRefreshToken was set
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError<IResponseBase>;
-      let errorMessage = "Something went wrong";
-
-      if (axiosError.response) {
-        errorMessage = axiosError.response.data?.message || errorMessage;
-      } else if (axiosError.request) {
-        errorMessage = "No response received from the server";
-      } else {
-        errorMessage = "A network error occurred";
       }
 
-      return Promise.reject({ ...error, message: errorMessage });
+      return Promise.reject(error);
     }
 
-    return Promise.reject({
-      message: "An unexpected error occurred",
-    } as ApiError);
+    return Promise.reject(error);
   },
 );
 

@@ -3,6 +3,7 @@ import {
   initialUserState,
   IUser,
   type IUserProfileResponse,
+  LoadingStatus,
   UserLoggedInType,
 } from "@/model/User";
 import { RootState } from "@/redux/store";
@@ -80,14 +81,14 @@ export const userSlice = createSlice({
         state.userLoggedInStatus = UserLoggedInType.No;
       })
       .addCase(getUserActionAsync.pending, (state) => {
-        state.loading = true;
+        state.userLoadingStatus = LoadingStatus.Loading;
       })
       .addCase(getUserActionAsync.fulfilled, (state, action) => {
         state.user = action.payload;
-        state.loading = false;
+        state.userLoadingStatus = LoadingStatus.Loaded;
       })
       .addCase(getUserActionAsync.rejected, (state) => {
-        state.loading = false;
+        state.userLoadingStatus = LoadingStatus.Error;
       });
   },
 });
