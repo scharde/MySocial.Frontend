@@ -1,10 +1,27 @@
-import { API_Check_Auth, API_Login, API_Refresh } from "../Utils/constant.";
+import {
+  API_Check_Auth,
+  API_Login,
+  API_Refresh,
+  API_Register,
+} from "@/Utils/constant.";
 import httpService, { type CustomAxiosRequestConfig } from "./httpService";
 import { API_Logout } from "@/Utils/constant.";
-import { ISignInCredentials } from "@/model/Auth";
+import { ISignInCredentials, ISignUpRequest } from "@/model/Auth";
 
 export const loginAsync = async (login: ISignInCredentials) => {
   const result = await httpService.post(API_Login, login, {
+    skipRefreshToken: true,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Ldi-Api-Key": "",
+    },
+  } as CustomAxiosRequestConfig);
+
+  return result.data;
+};
+
+export const registerAsync = async (request: ISignUpRequest) => {
+  const result = await httpService.post(API_Register, request, {
     skipRefreshToken: true,
     headers: {
       "Content-Type": "application/json",

@@ -69,12 +69,14 @@ export const feedSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(getPostActionAsync.fulfilled, (state, action) => {
-      state.posts = action.payload.items || [];
-      state.page = action.payload.page;
-      state.pageSize = action.payload.pageSize;
-      state.totalCount = action.payload.totalCount;
-    });
+    builder
+      .addCase("RESET", () => initialFeedState)
+      .addCase(getPostActionAsync.fulfilled, (state, action) => {
+        state.posts = action.payload.items || [];
+        state.page = action.payload.page;
+        state.pageSize = action.payload.pageSize;
+        state.totalCount = action.payload.totalCount;
+      });
   },
 });
 

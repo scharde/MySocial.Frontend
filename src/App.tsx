@@ -8,6 +8,7 @@ import Unauthorized from "@/components/Unauthorized";
 import Home from "@/Module/Dashboard/Home";
 import SocialFeed from "@/Module/Feed/SocialFeed";
 import Layout from "@/Module/Layout";
+import SignUp from "@/components/sign-in/SignUp";
 
 function App() {
   const router = createBrowserRouter([
@@ -16,15 +17,21 @@ function App() {
       Component: Unauthorized,
     },
     {
-      path: "/login",
+      path: "/sign-in",
       Component: SignIn,
+    },
+    {
+      path: "/sign-up",
+      Component: SignUp,
     },
     {
       path: "/home",
       element: (
-        <Layout>
-          <SocialFeed />
-        </Layout>
+        <PrivateRoute>
+          <Layout>
+            <SocialFeed />
+          </Layout>
+        </PrivateRoute>
       ),
     },
     {

@@ -1,8 +1,6 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import CssBaseline from "@mui/material/CssBaseline";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
@@ -18,11 +16,9 @@ import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { API_GOOGLE_SIGN_IN, GOOGLE_SIGN_IN_CALLBACK } from "@/Utils/constant.";
 import React, { useState } from "react";
-import { loginAsync } from "@/services/AuthService";
-import { ISignInCredentials } from "@/model/Auth";
-import { useNavigate } from "react-router-dom";
+import { registerAsync } from "@/services/AuthService";
+import { ISignUpRequest } from "@/model/Auth";
 import { Alert } from "@mui/material";
-import { useAppDispatch } from "@/redux/hooks";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -43,7 +39,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
   }),
 }));
 
-const SignInContainer = styled(Stack)(({ theme }) => ({
+const SignUpContainer = styled(Stack)(({ theme }) => ({
   height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
   minHeight: "100%",
   padding: theme.spacing(2),
@@ -66,17 +62,21 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
-  const router = useNavigate();
-  const dispatch = useAppDispatch();
-
-  const [isLoginInProgress, setIsLoginInProgress] = useState<boolean>(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = useState("");
-  const [passwordError, setPasswordError] = useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
-  const [open, setOpen] = useState(false);
+export default function SignUp(props: { disableCustomTheme?: boolean }) {
+  const [isRegisterInInProgress, setIsRegisterInProgress] =
+    useState<boolean>(false);
+  const [registerStatus, setRegisterStatus] = useState<
+    "none" | "success" | "failed"
+  >("none");
+  const [firstNameError, setFirstNameError] = React.useState(false);
+  const [firstNameErrorMessage, setFirstNameErrorMessage] = React.useState("");
+  const [lastNameError, setLastNameError] = React.useState(false);
+  const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState("");
+  const [emailError, setEmailError] = React.useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
+  const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -99,10 +99,30 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   };
 
   const validateInputs = async () => {
+    const firstName = document.getElementById("firstName") as HTMLInputElement;
+    const lastName = document.getElementById("lastName") as HTMLInputElement;
     const email = document.getElementById("email") as HTMLInputElement;
     const password = document.getElementById("password") as HTMLInputElement;
 
     let isValid = true;
+
+    if (firstName.value == "" || firstName.value.length <= 0) {
+      setFirstNameError(true);
+      setFirstNameErrorMessage("Please enter a valid first name");
+      isValid = false;
+    } else {
+      setFirstNameError(false);
+      setFirstNameErrorMessage("");
+    }
+
+    if (lastName.value == "" || lastName.value.length <= 0) {
+      setLastNameError(true);
+      setLastNameErrorMessage("Please enter a valid last name");
+      isValid = false;
+    } else {
+      setLastNameError(false);
+      setLastNameErrorMessage("");
+    }
 
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
       setEmailError(true);
@@ -124,19 +144,20 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
     if (!isValid) return isValid;
 
-    setIsLoginInProgress(true);
-    setFormError(null);
+    setIsRegisterInProgress(true);
 
     try {
-      await loginAsync({
+      await registerAsync({
+        firstName: firstName.value,
+        lastName: lastName.value,
         email: email.value,
         password: password.value,
-      } as ISignInCredentials);
-      await dispatch({ type: "RESET" });
-      router("/home");
+      } as ISignUpRequest);
+      setRegisterStatus("success");
     } catch (e) {
-      setFormError("Email or password is invalid");
-      setIsLoginInProgress(false);
+      setRegisterStatus("failed");
+    } finally {
+      setIsRegisterInProgress(false);
     }
   };
 
@@ -147,7 +168,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="space-between">
+      <SignUpContainer direction="column" justifyContent="space-between">
         <ColorModeSelect
           sx={{ position: "fixed", top: "1rem", right: "1rem" }}
         />
@@ -157,7 +178,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             variant="h4"
             sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
           >
-            Sign in
+            Sign Up
           </Typography>
           <Box
             component="form"
@@ -170,7 +191,48 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               gap: 2,
             }}
           >
-            {formError && <Alert severity="error">{formError}</Alert>}
+            {registerStatus == "success" && (
+              <Alert severity="success">
+                User registered. Please <Link href="/sign-in">Sign In</Link>
+                &nbsp; to proceed
+              </Alert>
+            )}
+
+            <FormControl>
+              {registerStatus == "failed" && (
+                <Alert severity="error">
+                  Failed to register. Please try again.
+                </Alert>
+              )}
+
+              <FormLabel htmlFor="firstName">First Name</FormLabel>
+              <TextField
+                error={firstNameError}
+                helperText={firstNameErrorMessage}
+                id="firstName"
+                type="text"
+                name="firstName"
+                autoFocus
+                required
+                fullWidth
+                variant="outlined"
+                color={firstNameError ? "error" : "primary"}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel htmlFor="lastName">Last Name</FormLabel>
+              <TextField
+                error={lastNameError}
+                helperText={lastNameErrorMessage}
+                id="lastName"
+                type="text"
+                name="lastName"
+                required
+                fullWidth
+                variant="outlined"
+                color={lastNameError ? "error" : "primary"}
+              />
+            </FormControl>
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
@@ -181,7 +243,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 name="email"
                 placeholder="your@email.com"
                 autoComplete="email"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
@@ -205,31 +266,18 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 color={passwordError ? "error" : "primary"}
               />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               onClick={validateInputs}
-              disabled={isLoginInProgress}
+              disabled={isRegisterInInProgress}
             >
               <Box sx={{ textTransform: "capitalize" }}>
-                {isLoginInProgress ? "Please wait" : "Sign In"}
+                {isRegisterInInProgress ? "Please wait" : "Sign Up"}
               </Box>
             </Button>
-            <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
-              variant="body2"
-              sx={{ alignSelf: "center" }}
-            >
-              Forgot your password?
-            </Link>
           </Box>
           <Divider>or</Divider>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -239,29 +287,30 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               onClick={handleGoogleSingIn}
               startIcon={<GoogleIcon />}
             >
-              Sign in with Google
+              Sign up with Google
             </Button>
             <Button
+              disabled
               fullWidth
               variant="outlined"
-              onClick={() => alert("Sign in with Facebook")}
+              onClick={() => alert("Sign up with Facebook")}
               startIcon={<FacebookIcon />}
             >
-              Sign in with Facebook
+              Sign up with Facebook
             </Button>
             <Typography sx={{ textAlign: "center" }}>
-              Don&apos;t have an account?{" "}
+              Already have an account?{" "}
               <Link
-                href="/sign-up"
+                href="/sign-in"
                 variant="body2"
                 sx={{ alignSelf: "center" }}
               >
-                Sign up
+                Sign In
               </Link>
             </Typography>
           </Box>
         </Card>
-      </SignInContainer>
+      </SignUpContainer>
     </AppTheme>
   );
 }

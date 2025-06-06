@@ -13,6 +13,7 @@ import {
   refreshAsync,
 } from "@/services/AuthService";
 import { getUserAsync } from "@/services/userService.cs";
+import { initialFeedState } from "@/model/Feed";
 
 export const checkAuthActionAsync = createAsyncThunk<IUserProfileResponse>(
   "auth/check-auth",
@@ -71,6 +72,7 @@ export const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase("RESET", () => initialUserState)
       .addCase(checkAuthActionAsync.fulfilled, (state) => {
         state.userLoggedInStatus = UserLoggedInType.Yes;
       })

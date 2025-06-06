@@ -42,7 +42,7 @@ const PrivateRoute = ({ children }: IPrivateRoute) => {
   if (userLoggedInStatus === UserLoggedInType.Yes) {
     return children;
   } else if (userLoggedInStatus === UserLoggedInType.No) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/sign-in" />;
   }
 
   return <LoadingLoader />;

@@ -15,7 +15,7 @@ import { useState } from "react";
 import { Logout, Settings, Person } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
-import { useNavigate, useNavigation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getUserActionAsync, logoutActionAsync } from "@/redux/userSlice";
 import { LoadingStatus } from "@/model/User";
 
@@ -35,13 +35,14 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (userLoadingStatus == LoadingStatus.Loaded && !user) {
-      router("/login");
+      router("/sign-in");
     }
   }, [user, userLoadingStatus, router]);
 
   const handleLogout = async () => {
     dispatch(logoutActionAsync());
-    router("/login");
+    await dispatch({ type: "RESET" });
+    router("/sign-in");
   };
 
   if (userLoadingStatus == LoadingStatus.Loading) {
