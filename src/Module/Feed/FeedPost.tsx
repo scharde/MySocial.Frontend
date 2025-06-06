@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Avatar,
   Box,
   Card,
   CardActions,
@@ -21,7 +20,7 @@ import { IFeedPostResponse } from "@/model/Feed";
 const FeedPost = ({ post }: { post: IFeedPostResponse }) => {
   return (
     <Card sx={{ maxWidth: 600, margin: "1rem auto", borderRadius: 2 }}>
-      <CardHeader avatar={post.authorName} />
+      <CardHeader avatar={post.author.name} />
       <CardContent>
         <Typography variant="body1">{post.content}</Typography>
       </CardContent>
