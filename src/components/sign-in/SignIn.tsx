@@ -23,6 +23,7 @@ import { ISignInCredentials } from "@/model/Auth";
 import { useNavigate } from "react-router-dom";
 import { Alert } from "@mui/material";
 import { useAppDispatch } from "@/redux/hooks";
+import { setStorage, StorageKeyType } from "@/Utils/storage";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -128,11 +129,17 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     setFormError(null);
 
     try {
-      await loginAsync({
+      const data = await loginAsync({
         email: email.value,
         password: password.value,
       } as ISignInCredentials);
+
       await dispatch({ type: "RESET" });
+
+      setStorage(StorageKeyType.Token, data.token);
+      setStorage(StorageKeyType.RefreshToken, data.refreshToken || "");
+      setStorage(StorageKeyType.ExpiryTime, data.expiryTime.toString() || "");
+
       router("/home");
     } catch (e) {
       setFormError("Email or password is invalid");

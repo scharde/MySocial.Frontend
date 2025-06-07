@@ -9,6 +9,7 @@ import Home from "@/Module/Dashboard/Home";
 import SocialFeed from "@/Module/Feed/SocialFeed";
 import Layout from "@/Module/Layout";
 import SignUp from "@/components/sign-in/SignUp";
+import AuthCallback from "@/components/AuthCallback";
 
 function App() {
   const router = createBrowserRouter([
@@ -25,14 +26,8 @@ function App() {
       Component: SignUp,
     },
     {
-      path: "/home",
-      element: (
-        <PrivateRoute>
-          <Layout>
-            <SocialFeed />
-          </Layout>
-        </PrivateRoute>
-      ),
+      path: "/auth-callback",
+      Component: AuthCallback,
     },
     {
       path: "/",

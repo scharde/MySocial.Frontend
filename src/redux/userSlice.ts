@@ -13,7 +13,7 @@ import {
   refreshAsync,
 } from "@/services/AuthService";
 import { getUserAsync } from "@/services/userService.cs";
-import { initialFeedState } from "@/model/Feed";
+import { cleanAllStorage } from "@/Utils/storage";
 
 export const checkAuthActionAsync = createAsyncThunk<IUserProfileResponse>(
   "auth/check-auth",
@@ -37,6 +37,7 @@ export const logoutActionAsync = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
+      cleanAllStorage();
       await logoutAsync();
     } catch (error: any) {
       return rejectWithValue(error.response.data);

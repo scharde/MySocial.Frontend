@@ -8,7 +8,15 @@ import httpService, { type CustomAxiosRequestConfig } from "./httpService";
 import { API_Logout } from "@/Utils/constant.";
 import { ISignInCredentials, ISignUpRequest } from "@/model/Auth";
 
-export const loginAsync = async (login: ISignInCredentials) => {
+export interface TokenResponse {
+  token: string;
+  refreshToken: string;
+  expiryTime: Date;
+}
+
+export const loginAsync = async (
+  login: ISignInCredentials,
+): Promise<TokenResponse> => {
   const result = await httpService.post(API_Login, login, {
     skipRefreshToken: true,
     headers: {

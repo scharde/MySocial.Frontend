@@ -7,6 +7,7 @@ import axios, {
 import { store } from "@/redux/store";
 import { logoutActionAsync, refreshTokenActionAsync } from "@/redux/userSlice";
 import { IResponseBase } from "@/model/Common";
+import { getStorage, StorageKeyType } from "@/Utils/storage";
 
 export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   skipRefreshToken?: boolean;
@@ -33,6 +34,17 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.defaults.withCredentials = true;
 let isLoggingOut = false;
 
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getStorage(StorageKeyType.Token); // get latest token
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => response,
   async (error: AxiosError): Promise<any> => {
@@ -49,13 +61,13 @@ axiosInstance.interceptors.response.use(
 
       try {
         await store.dispatch(logoutActionAsync());
-        await store.dispatch({ type: "RESET" });
-        window.location.href = "/login";
+        store.dispatch({ type: "RESET" });
+        window.location.href = "/sign-in";
       } catch (err) {
         // Still logout, even if error occurs
         await store.dispatch(logoutActionAsync());
-        await store.dispatch({ type: "RESET" });
-        window.location.href = "/login";
+        store.dispatch({ type: "RESET" });
+        window.location.href = "/sign-in";
       }
 
       return Promise.reject(error);

@@ -1,5 +1,5 @@
 export const API_GOOGLE_SIGN_IN: string = "/api/Auth/google-login";
-export const GOOGLE_SIGN_IN_CALLBACK: string = `${window.location.origin}/home`;
+export const GOOGLE_SIGN_IN_CALLBACK: string = `${window.location.origin}/auth-callback`;
 
 export const API_Auth: string = "/api/auth";
 export const API_Login: string = `${API_Auth}/login`;
