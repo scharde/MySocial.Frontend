@@ -5,7 +5,6 @@ import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import PrivateRoute from "@/components/PrivateRoute";
 import Unauthorized from "@/components/Unauthorized";
-import Home from "@/Module/Dashboard/Home";
 import SocialFeed from "@/Module/Feed/SocialFeed";
 import Layout from "@/Module/Layout";
 import SignUp from "@/components/sign-in/SignUp";

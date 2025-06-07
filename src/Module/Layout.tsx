@@ -61,7 +61,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <AppBar position="sticky">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Social Feed
+            Sky Social
           </Typography>
 
           <Box display="flex" alignItems="center" gap={2}>

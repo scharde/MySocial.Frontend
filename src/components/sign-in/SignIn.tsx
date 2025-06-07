@@ -140,7 +140,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       setStorage(StorageKeyType.RefreshToken, data.refreshToken || "");
       setStorage(StorageKeyType.ExpiryTime, data.expiryTime.toString() || "");
 
-      router("/home");
+      router("/");
     } catch (e) {
       setFormError("Email or password is invalid");
       setIsLoginInProgress(false);

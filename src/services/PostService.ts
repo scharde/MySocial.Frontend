@@ -1,9 +1,19 @@
 import httpService, { type CustomAxiosRequestConfig } from "./httpService";
-import { API_Post, API_Post_Vote } from "@/Utils/constant.";
+import { API_Follow, API_Post, API_Post_Vote } from "@/Utils/constant.";
 import { Axios } from "axios";
 
 export interface ICreatePostRequest {
   content: string;
+}
+
+export interface IFollowToggleRequest {
+  followerId: string;
+  followeeId: string;
+}
+
+export interface IFollowToggleResponse {
+  followerId: string;
+  followeeId: string;
 }
 
 export const createPostAsync = async (data: ICreatePostRequest) => {

@@ -12,8 +12,9 @@ import {
   logoutAsync,
   refreshAsync,
 } from "@/services/AuthService";
-import { getUserAsync } from "@/services/userService.cs";
+import { getFollowerListAsync, getUserAsync } from "@/services/userService";
 import { cleanAllStorage } from "@/Utils/storage";
+import { feedSlice } from "@/redux/feedSlice.";
 
 export const checkAuthActionAsync = createAsyncThunk<IUserProfileResponse>(
   "auth/check-auth",
@@ -67,10 +68,31 @@ export const getUserActionAsync = createAsyncThunk<IUser>(
   },
 );
 
+export const getFollowingActionAsync = createAsyncThunk<string[]>(
+  "user/getFollowingActionAsync",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getFollowerListAsync();
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
+  },
+);
+
 export const userSlice = createSlice({
   name: "user",
   initialState: initialUserState,
-  reducers: {},
+  reducers: {
+    followingToggleAction: (
+      state,
+      action: { payload: { followingToId: string } },
+    ) => {
+      let { followingToId } = action.payload;
+      state.followingToIds = state.followingToIds.includes(followingToId)
+        ? state.followingToIds.filter((v) => v !== followingToId)
+        : [...state.followingToIds, followingToId];
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase("RESET", () => initialUserState)
@@ -92,8 +114,13 @@ export const userSlice = createSlice({
       })
       .addCase(getUserActionAsync.rejected, (state) => {
         state.userLoadingStatus = LoadingStatus.Error;
+      })
+      .addCase(getFollowingActionAsync.fulfilled, (state, action) => {
+        state.followingToIds = action.payload;
       });
   },
 });
+
+export const { followingToggleAction } = userSlice.actions;
 
 export default userSlice.reducer;

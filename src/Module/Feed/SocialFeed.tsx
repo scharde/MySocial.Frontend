@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -44,6 +42,11 @@ import { postVotesAsync } from "@/services/PostService";
 import { getCommentsAsync, postCommentsAsync } from "@/services/CommentService";
 import { formatDistanceToNow } from "date-fns";
 import { formatDateToNow } from "@/Utils/utils";
+import { followUserAsync } from "@/services/userService";
+import {
+  followingToggleAction,
+  getFollowingActionAsync,
+} from "@/redux/userSlice";
 
 export default function SocialFeed() {
   const [newPost, setNewPost] = useState("");
@@ -54,10 +57,15 @@ export default function SocialFeed() {
   const [comments, setComments] = useState<ICommentResponse[]>([]);
   const [newComment, setNewComment] = useState("");
 
-  const inputFeedRef = useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
   const { posts, page } = useAppSelector((state: RootState) => state.feedState);
-  const { user } = useAppSelector((store: RootState) => store.userState);
+  const { user, followingToIds } = useAppSelector(
+    (store: RootState) => store.userState,
+  );
+
+  useEffect(() => {
+    dispatch(getFollowingActionAsync());
+  }, []);
 
   useEffect(() => {
     dispatch(getPostActionAsync(page));
@@ -87,12 +95,13 @@ export default function SocialFeed() {
     }
   };
 
-  const handleFollow = async (postId: string) => {
+  const handleToggleFollow = async (postId: string) => {
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
 
     try {
-      await axios.post(`/users/${post.author.id}/follow`);
+      await followUserAsync(post.author.id);
+      dispatch(followingToggleAction({ followingToId: post.author.id }));
     } catch (error) {
       console.error("Failed to follow/unfollow:", error);
     }
@@ -161,140 +170,143 @@ export default function SocialFeed() {
       </Card>
 
       {/* Posts Feed */}
-      {posts.map((post) => (
-        <Card key={post.id} sx={{ mb: 3 }}>
-          <CardContent>
-            {/* Post Header */}
-            <Box
-              display="flex"
-              alignItems="flex-start"
-              justifyContent="space-between"
-              mb={2}
-            >
-              <Box display="flex" gap={2}>
-                <Avatar src={post.author.avatar} alt={post.author.name}>
-                  {post.author.name.charAt(0)}
-                </Avatar>
-                <Box>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {post.author.name}
+      {posts.map((post) => {
+        let isFollowing = followingToIds.includes(post.author.id);
+        return (
+          <Card key={post.id} sx={{ mb: 3 }}>
+            <CardContent>
+              {/* Post Header */}
+              <Box
+                display="flex"
+                alignItems="flex-start"
+                justifyContent="space-between"
+                mb={2}
+              >
+                <Box display="flex" gap={2}>
+                  <Avatar src={post.author.avatar} alt={post.author.name}>
+                    {post.author.name.charAt(0)}
+                  </Avatar>
+                  <Box>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {post.author.name}
+                      </Typography>
+                      {isFollowing && (
+                        <Chip
+                          label="Following"
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {post.author.title}
                     </Typography>
-                    {post.author.isFollowing && (
-                      <Chip
-                        label="Following"
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      {formatDateToNow(post.createdDateUtc)}
+                    </Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {post.author.title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {formatDateToNow(post.createdDateUtc)}
-                  </Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  {!isFollowing && post.author.id !== user?.id && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PersonAdd />}
+                      onClick={() => handleToggleFollow(post.id)}
+                    >
+                      Follow
+                    </Button>
+                  )}
+                  {isFollowing && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PersonRemove />}
+                      onClick={() => handleToggleFollow(post.id)}
+                    >
+                      Unfollow
+                    </Button>
+                  )}
+                  <IconButton
+                    onClick={(e) => {
+                      setAnchorEl(e.currentTarget);
+                      setSelectedPost(post.id);
+                    }}
+                  >
+                    <MoreVert />
+                  </IconButton>
                 </Box>
               </Box>
-              <Box display="flex" alignItems="center" gap={1}>
-                {!post.author.isFollowing && post.author.id !== user?.id && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PersonAdd />}
-                    onClick={() => handleFollow(post.id)}
-                  >
-                    Follow
-                  </Button>
-                )}
-                {post.author.isFollowing && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PersonRemove />}
-                    onClick={() => handleFollow(post.id)}
-                  >
-                    Unfollow
-                  </Button>
-                )}
-                <IconButton
-                  onClick={(e) => {
-                    setAnchorEl(e.currentTarget);
-                    setSelectedPost(post.id);
-                  }}
+
+              {/* Post Content */}
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {post.content}
+              </Typography>
+
+              {/* Engagement Stats */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={1}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {post.upVotes - post.downVotes} points • {post.commentCount}{" "}
+                  comments
+                </Typography>
+              </Box>
+
+              <Divider sx={{ mb: 1 }} />
+            </CardContent>
+
+            {/* Action Buttons */}
+            <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
+              <Box display="flex" gap={1}>
+                <Button
+                  startIcon={<ThumbUp />}
+                  onClick={() => handleVote(post.id, 1)}
+                  color={
+                    post.userVote === VoteType.UpVote ? "primary" : "inherit"
+                  }
+                  size="small"
                 >
-                  <MoreVert />
+                  {post.upVotes}
+                </Button>
+                <Button
+                  startIcon={<ThumbDown />}
+                  onClick={() => handleVote(post.id, 2)}
+                  color={
+                    post.userVote === VoteType.DownVote ? "error" : "inherit"
+                  }
+                  size="small"
+                >
+                  {post.downVotes}
+                </Button>
+              </Box>
+
+              <Box display="flex" gap={1}>
+                <IconButton onClick={() => handleOpenComments(post.id)}>
+                  <Comment />
+                </IconButton>
+                <IconButton>
+                  <Share />
+                </IconButton>
+                <IconButton>
+                  <Send />
+                </IconButton>
+                <IconButton
+                  onClick={() => handleBookmark(post.id)}
+                  color={post.userBookmarked ? "primary" : "default"}
+                >
+                  <Bookmark />
                 </IconButton>
               </Box>
-            </Box>
-
-            {/* Post Content */}
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              {post.content}
-            </Typography>
-
-            {/* Engagement Stats */}
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={1}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {post.upVotes - post.downVotes} points • {post.commentCount}{" "}
-                comments
-              </Typography>
-            </Box>
-
-            <Divider sx={{ mb: 1 }} />
-          </CardContent>
-
-          {/* Action Buttons */}
-          <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
-            <Box display="flex" gap={1}>
-              <Button
-                startIcon={<ThumbUp />}
-                onClick={() => handleVote(post.id, 1)}
-                color={
-                  post.userVote === VoteType.UpVote ? "primary" : "inherit"
-                }
-                size="small"
-              >
-                {post.upVotes}
-              </Button>
-              <Button
-                startIcon={<ThumbDown />}
-                onClick={() => handleVote(post.id, 2)}
-                color={
-                  post.userVote === VoteType.DownVote ? "error" : "inherit"
-                }
-                size="small"
-              >
-                {post.downVotes}
-              </Button>
-            </Box>
-
-            <Box display="flex" gap={1}>
-              <IconButton onClick={() => handleOpenComments(post.id)}>
-                <Comment />
-              </IconButton>
-              <IconButton>
-                <Share />
-              </IconButton>
-              <IconButton>
-                <Send />
-              </IconButton>
-              <IconButton
-                onClick={() => handleBookmark(post.id)}
-                color={post.userBookmarked ? "primary" : "default"}
-              >
-                <Bookmark />
-              </IconButton>
-            </Box>
-          </CardActions>
-        </Card>
-      ))}
+            </CardActions>
+          </Card>
+        );
+      })}
 
       {/* Post Menu */}
       <Menu

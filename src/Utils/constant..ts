@@ -13,3 +13,5 @@ export const API_Post: string = "/api/post";
 export const API_User: string = "/api/user";
 export const API_Post_Vote: string = "/api/post-vote";
 export const API_Comments: string = "/api/comments";
+
+export const API_Follow: string = "/api/follow";

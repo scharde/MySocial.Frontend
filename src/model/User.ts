@@ -35,12 +35,14 @@ export interface UserState {
   userLoggedInStatus: UserLoggedInType;
   user: IUser | null;
   userLoadingStatus: LoadingStatus;
+  followingToIds: string[];
 }
 
 export const initialUserState: UserState = {
   userLoggedInStatus: UserLoggedInType.None,
   user: null,
   userLoadingStatus: LoadingStatus.None,
+  followingToIds: [],
 };
 
 export interface IUserProfileResponse {

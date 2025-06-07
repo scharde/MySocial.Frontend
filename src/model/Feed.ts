@@ -3,7 +3,6 @@ export interface IPostAuthor {
   name: string;
   avatar?: string;
   title?: string;
-  isFollowing: boolean;
 }
 
 export enum VoteType {
