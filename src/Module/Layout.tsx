@@ -18,6 +18,7 @@ import { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 import { getUserActionAsync, logoutActionAsync } from "@/redux/userSlice";
 import { LoadingStatus } from "@/model/User";
+import { LoadingLoader } from "@/components/PrivateRoute";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useNavigate();
@@ -46,7 +47,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   };
 
   if (userLoadingStatus == LoadingStatus.Loading) {
-    return <div>Loading...</div>;
+    return <LoadingLoader />;
   }
 
   if (!user) {

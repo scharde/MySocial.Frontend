@@ -16,7 +16,6 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
-  CircularProgress,
 } from "@mui/material";
 import {
   ThumbUp,
@@ -29,33 +28,26 @@ import {
   PersonAdd,
   PersonRemove,
 } from "@mui/icons-material";
-import axios from "axios";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
-import {
-  createPostActionAsync,
-  getPostActionAsync,
-  updateVoteAction,
-} from "@/redux/feedSlice.";
+import { getPostActionAsync, updateVoteAction } from "@/redux/feedSlice.";
 import { ICommentRequest, ICommentResponse, VoteType } from "@/model/Feed";
 import { postVotesAsync } from "@/services/PostService";
 import { getCommentsAsync, postCommentsAsync } from "@/services/CommentService";
-import { formatDistanceToNow } from "date-fns";
 import { formatDateToNow } from "@/Utils/utils";
 import { followUserAsync } from "@/services/userService";
 import {
   followingToggleAction,
   getFollowingActionAsync,
 } from "@/redux/userSlice";
+import NewPost from "@/Module/Feed/NewPost.";
 
 export default function SocialFeed() {
-  const [newPost, setNewPost] = useState("");
-  const [postLoading, setPostLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [commentDialog, setCommentDialog] = useState<string | null>(null);
   const [comments, setComments] = useState<ICommentResponse[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [selectedPost, setSelectedPost] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
   const { posts, page } = useAppSelector((state: RootState) => state.feedState);
@@ -72,19 +64,6 @@ export default function SocialFeed() {
   }, []);
 
   const name = `${user?.firstName} ${user?.lastName}}`;
-
-  const handleCreatePost = async () => {
-    if (!newPost.trim()) return;
-
-    setPostLoading(true);
-    try {
-      dispatch(createPostActionAsync(newPost));
-      setNewPost("");
-      dispatch(getPostActionAsync(page));
-    } finally {
-      setPostLoading(false);
-    }
-  };
 
   const handleVote = async (postId: string, vote: number) => {
     try {
@@ -109,7 +88,8 @@ export default function SocialFeed() {
 
   const handleBookmark = async (postId: string) => {
     try {
-      await axios.post(`/posts/${postId}/bookmark`);
+      // await axios.post(`/posts/${postId}/bookmark`);
+      console.warn("Not implemented");
     } catch (error) {
       console.error("Failed to bookmark:", error);
     }
@@ -138,40 +118,11 @@ export default function SocialFeed() {
   return (
     <Box maxWidth="600px" mx="auto" p={2}>
       {/* Create Post */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" gap={2}>
-            <Avatar src={user?.avatar} alt={name}>
-              {name?.charAt(0)}
-            </Avatar>
-            <Box flex={1}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                placeholder="What's on your mind?"
-                value={newPost}
-                onChange={(e) => setNewPost(e.target.value)}
-                variant="outlined"
-                sx={{ mb: 2 }}
-              />
-              <Box display="flex" justifyContent="flex-end">
-                <Button
-                  variant="contained"
-                  onClick={handleCreatePost}
-                  disabled={!newPost.trim() || postLoading}
-                >
-                  {postLoading ? <CircularProgress size={20} /> : "Post"}
-                </Button>
-              </Box>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+      <NewPost />
 
       {/* Posts Feed */}
       {posts.map((post) => {
-        let isFollowing = followingToIds.includes(post.author.id);
+        let isFollowing = followingToIds.includes(post.author?.id);
         return (
           <Card key={post.id} sx={{ mb: 3 }}>
             <CardContent>

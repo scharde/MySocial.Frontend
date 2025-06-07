@@ -52,7 +52,7 @@ const BootstrapBackdrop = styled(Backdrop)({
   backgroundColor: "transparent",
 });
 
-const LoadingLoader = () => {
+export const LoadingLoader = () => {
   return (
     <BootstrapBackdrop
       open={true}

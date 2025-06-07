@@ -10,11 +10,10 @@ import { RootState } from "@/redux/store";
 import { createPostAsync, getPostAsync } from "@/services/PostService";
 
 export const createPostActionAsync = createAsyncThunk<
-  IUserProfileResponse,
+  IFeedPostResponse,
   string
 >("feed/create-post", async (content) => {
-  const response = await createPostAsync({ content: content });
-  return response.data;
+  return await createPostAsync({ content: content });
 });
 
 export const getPostActionAsync = createAsyncThunk<
@@ -76,6 +75,9 @@ export const feedSlice = createSlice({
         state.page = action.payload.page;
         state.pageSize = action.payload.pageSize;
         state.totalCount = action.payload.totalCount;
+      })
+      .addCase(createPostActionAsync.fulfilled, (state, action) => {
+        state.posts.unshift(action.payload);
       });
   },
 });
