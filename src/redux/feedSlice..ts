@@ -71,7 +71,14 @@ export const feedSlice = createSlice({
     builder
       .addCase("RESET", () => initialFeedState)
       .addCase(getPostActionAsync.fulfilled, (state, action) => {
-        state.posts = action.payload.items || [];
+        if (action.payload.items && action.payload.items.length > 0) {
+          const combined = [...state.posts, ...(action.payload.items || [])];
+
+          state.posts = combined.filter(
+            (post, index, self) =>
+              index === self.findIndex((p) => p.id === post.id),
+          );
+        }
         state.page = action.payload.page;
         state.pageSize = action.payload.pageSize;
         state.totalCount = action.payload.totalCount;

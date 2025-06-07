@@ -7,15 +7,11 @@ import {
   Typography,
   IconButton,
   Button,
-  TextField,
   Box,
   Chip,
   Divider,
   Menu,
   MenuItem,
-  Dialog,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import {
   ThumbUp,
@@ -31,9 +27,8 @@ import {
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { getPostActionAsync, updateVoteAction } from "@/redux/feedSlice.";
-import { ICommentRequest, ICommentResponse, VoteType } from "@/model/Feed";
+import { VoteType } from "@/model/Feed";
 import { postVotesAsync } from "@/services/PostService";
-import { getCommentsAsync, postCommentsAsync } from "@/services/CommentService";
 import { formatDateToNow } from "@/Utils/utils";
 import { followUserAsync } from "@/services/userService";
 import {
@@ -41,16 +36,20 @@ import {
   getFollowingActionAsync,
 } from "@/redux/userSlice";
 import NewPost from "@/Module/Feed/NewPost.";
+import InfiniteScroll from "react-infinite-scroll-component";
+import PostComments from "@/Module/Feed/PostComments";
 
 export default function SocialFeed() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [commentDialog, setCommentDialog] = useState<string | null>(null);
-  const [comments, setComments] = useState<ICommentResponse[]>([]);
-  const [newComment, setNewComment] = useState("");
+  const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(
+    null,
+  );
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
-  const { posts, page } = useAppSelector((state: RootState) => state.feedState);
+  const { posts, page, totalCount } = useAppSelector(
+    (state: RootState) => state.feedState,
+  );
   const { user, followingToIds } = useAppSelector(
     (store: RootState) => store.userState,
   );
@@ -62,8 +61,6 @@ export default function SocialFeed() {
   useEffect(() => {
     dispatch(getPostActionAsync(page));
   }, []);
-
-  const name = `${user?.firstName} ${user?.lastName}}`;
 
   const handleVote = async (postId: string, vote: number) => {
     try {
@@ -96,23 +93,11 @@ export default function SocialFeed() {
   };
 
   const handleOpenComments = async (postId: string) => {
-    setCommentDialog(postId);
-    const response = await getCommentsAsync(postId, 1, 10);
-    setComments(response.items);
+    setOpenCommentsPostId(postId);
   };
 
-  const handleAddComment = async () => {
-    if (!newComment.trim() || !commentDialog) return;
-    try {
-      const response = await postCommentsAsync({
-        postId: commentDialog,
-        content: newComment,
-      } as ICommentRequest);
-      // setComments([...comments, response.data.comment]);
-      setNewComment("");
-    } catch (error) {
-      console.error("Failed to add comment:", error);
-    }
+  const fetchMorePosts = async () => {
+    await dispatch(getPostActionAsync(page + 1));
   };
 
   return (
@@ -121,143 +106,151 @@ export default function SocialFeed() {
       <NewPost />
 
       {/* Posts Feed */}
-      {posts.map((post) => {
-        let isFollowing = followingToIds.includes(post.author?.id);
-        return (
-          <Card key={post.id} sx={{ mb: 3 }}>
-            <CardContent>
-              {/* Post Header */}
-              <Box
-                display="flex"
-                alignItems="flex-start"
-                justifyContent="space-between"
-                mb={2}
-              >
-                <Box display="flex" gap={2}>
-                  <Avatar src={post.author.avatar} alt={post.author.name}>
-                    {post.author.name.charAt(0)}
-                  </Avatar>
-                  <Box>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        {post.author.name}
+      <InfiniteScroll
+        dataLength={posts.length}
+        next={fetchMorePosts}
+        hasMore={totalCount > posts.length}
+        loader={<h4>Loading...</h4>}
+        endMessage={<p>No more posts</p>}
+      >
+        {posts.map((post) => {
+          let isFollowing = followingToIds.includes(post.author?.id);
+          return (
+            <Card key={post.id} sx={{ mb: 3 }}>
+              <CardContent>
+                {/* Post Header */}
+                <Box
+                  display="flex"
+                  alignItems="flex-start"
+                  justifyContent="space-between"
+                  mb={2}
+                >
+                  <Box display="flex" gap={2}>
+                    <Avatar src={post.author.avatar} alt={post.author.name}>
+                      {post.author.name.charAt(0)}
+                    </Avatar>
+                    <Box>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          {post.author.name}
+                        </Typography>
+                        {isFollowing && (
+                          <Chip
+                            label="Following"
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {post.author.title}
                       </Typography>
-                      {isFollowing && (
-                        <Chip
-                          label="Following"
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDateToNow(post.createdDateUtc)}
+                      </Typography>
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {post.author.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDateToNow(post.createdDateUtc)}
-                    </Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {!isFollowing && post.author.id !== user?.id && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<PersonAdd />}
+                        onClick={() => handleToggleFollow(post.id)}
+                      >
+                        Follow
+                      </Button>
+                    )}
+                    {isFollowing && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<PersonRemove />}
+                        onClick={() => handleToggleFollow(post.id)}
+                      >
+                        Unfollow
+                      </Button>
+                    )}
+                    <IconButton
+                      onClick={(e) => {
+                        setAnchorEl(e.currentTarget);
+                        setSelectedPost(post.id);
+                      }}
+                    >
+                      <MoreVert />
+                    </IconButton>
                   </Box>
                 </Box>
-                <Box display="flex" alignItems="center" gap={1}>
-                  {!isFollowing && post.author.id !== user?.id && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<PersonAdd />}
-                      onClick={() => handleToggleFollow(post.id)}
-                    >
-                      Follow
-                    </Button>
-                  )}
-                  {isFollowing && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<PersonRemove />}
-                      onClick={() => handleToggleFollow(post.id)}
-                    >
-                      Unfollow
-                    </Button>
-                  )}
-                  <IconButton
-                    onClick={(e) => {
-                      setAnchorEl(e.currentTarget);
-                      setSelectedPost(post.id);
-                    }}
+
+                {/* Post Content */}
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {post.content}
+                </Typography>
+
+                {/* Engagement Stats */}
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={1}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {post.upVotes - post.downVotes} points • {post.commentCount}{" "}
+                    comments
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 1 }} />
+              </CardContent>
+
+              {/* Action Buttons */}
+              <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
+                <Box display="flex" gap={1}>
+                  <Button
+                    startIcon={<ThumbUp />}
+                    onClick={() => handleVote(post.id, 1)}
+                    color={
+                      post.userVote === VoteType.UpVote ? "primary" : "inherit"
+                    }
+                    size="small"
                   >
-                    <MoreVert />
+                    {post.upVotes}
+                  </Button>
+                  <Button
+                    startIcon={<ThumbDown />}
+                    onClick={() => handleVote(post.id, 2)}
+                    color={
+                      post.userVote === VoteType.DownVote ? "error" : "inherit"
+                    }
+                    size="small"
+                  >
+                    {post.downVotes}
+                  </Button>
+                </Box>
+
+                <Box display="flex" gap={1}>
+                  <IconButton onClick={() => handleOpenComments(post.id)}>
+                    <Comment />
+                  </IconButton>
+                  <IconButton>
+                    <Share />
+                  </IconButton>
+                  <IconButton>
+                    <Send />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => handleBookmark(post.id)}
+                    color={post.userBookmarked ? "primary" : "default"}
+                  >
+                    <Bookmark />
                   </IconButton>
                 </Box>
-              </Box>
-
-              {/* Post Content */}
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                {post.content}
-              </Typography>
-
-              {/* Engagement Stats */}
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  {post.upVotes - post.downVotes} points • {post.commentCount}{" "}
-                  comments
-                </Typography>
-              </Box>
-
-              <Divider sx={{ mb: 1 }} />
-            </CardContent>
-
-            {/* Action Buttons */}
-            <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
-              <Box display="flex" gap={1}>
-                <Button
-                  startIcon={<ThumbUp />}
-                  onClick={() => handleVote(post.id, 1)}
-                  color={
-                    post.userVote === VoteType.UpVote ? "primary" : "inherit"
-                  }
-                  size="small"
-                >
-                  {post.upVotes}
-                </Button>
-                <Button
-                  startIcon={<ThumbDown />}
-                  onClick={() => handleVote(post.id, 2)}
-                  color={
-                    post.userVote === VoteType.DownVote ? "error" : "inherit"
-                  }
-                  size="small"
-                >
-                  {post.downVotes}
-                </Button>
-              </Box>
-
-              <Box display="flex" gap={1}>
-                <IconButton onClick={() => handleOpenComments(post.id)}>
-                  <Comment />
-                </IconButton>
-                <IconButton>
-                  <Share />
-                </IconButton>
-                <IconButton>
-                  <Send />
-                </IconButton>
-                <IconButton
-                  onClick={() => handleBookmark(post.id)}
-                  color={post.userBookmarked ? "primary" : "default"}
-                >
-                  <Bookmark />
-                </IconButton>
-              </Box>
-            </CardActions>
-          </Card>
-        );
-      })}
+              </CardActions>
+            </Card>
+          );
+        })}
+      </InfiniteScroll>
 
       {/* Post Menu */}
       <Menu
@@ -270,73 +263,13 @@ export default function SocialFeed() {
         <MenuItem onClick={() => setAnchorEl(null)}>Report Post</MenuItem>
       </Menu>
 
-      {/* Comments Dialog */}
-      <Dialog
-        open={Boolean(commentDialog)}
-        onClose={() => setCommentDialog(null)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Typography variant="h6" gutterBottom>
-            Comments
-          </Typography>
-
-          {/* Add Comment */}
-          <Box display="flex" gap={2} mb={3}>
-            <Avatar src={user?.avatar} alt={name}>
-              {name?.charAt(0)}
-            </Avatar>
-            <TextField
-              fullWidth
-              placeholder="Write a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              size="small"
-            />
-          </Box>
-
-          {/* Comments List */}
-          <Box>
-            {comments.map((comment) => (
-              <Box key={comment.id} display="flex" gap={2} mb={2}>
-                <Avatar
-                  src={comment.author.avatar}
-                  alt={comment.author.name}
-                  sx={{ width: 32, height: 32 }}
-                >
-                  {comment.author.name.charAt(0)}
-                </Avatar>
-                <Box>
-                  <Box sx={{ bgcolor: "grey.100", borderRadius: 2, p: 1.5 }}>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {comment.author.name}
-                    </Typography>
-                    <Typography variant="body2">{comment.content}</Typography>
-                  </Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ ml: 1 }}
-                  >
-                    {formatDateToNow(comment.createdDateUtc)}
-                  </Typography>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCommentDialog(null)}>Cancel</Button>
-          <Button
-            onClick={handleAddComment}
-            variant="contained"
-            disabled={!newComment.trim()}
-          >
-            Comment
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/*Comments Dialog */}
+      {openCommentsPostId && (
+        <PostComments
+          postId={openCommentsPostId}
+          closeDialog={() => setOpenCommentsPostId(null)}
+        />
+      )}
     </Box>
   );
 }

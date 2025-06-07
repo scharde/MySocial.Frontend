@@ -9,14 +9,13 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
-import { createPostActionAsync, getPostActionAsync } from "@/redux/feedSlice.";
+import { createPostActionAsync } from "@/redux/feedSlice.";
 import { useState } from "react";
 
 const NewPost = () => {
   const [newPost, setNewPost] = useState("");
   const [postLoading, setPostLoading] = useState(false);
   const dispatch = useAppDispatch();
-  const { page } = useAppSelector((state: RootState) => state.feedState);
 
   const { user, followingToIds } = useAppSelector(
     (store: RootState) => store.userState,
@@ -29,7 +28,6 @@ const NewPost = () => {
     try {
       dispatch(createPostActionAsync(newPost));
       setNewPost("");
-      // dispatch(getPostActionAsync(page));
     } finally {
       setPostLoading(false);
     }
