@@ -6,13 +6,12 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
-import Link from "@mui/material/Link";
+import { Link as MuiLink } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import ForgotPassword from "./components/ForgotPassword";
 import { GoogleIcon, FacebookIcon } from "./components/CustomIcons";
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
@@ -24,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { Alert } from "@mui/material";
 import { useAppDispatch } from "@/redux/hooks";
 import { setStorage, StorageKeyType } from "@/Utils/storage";
+import { Link as RouterLink } from "react-router-dom";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -70,22 +70,12 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const router = useNavigate();
   const dispatch = useAppDispatch();
-
   const [isLoginInProgress, setIsLoginInProgress] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     if (emailError || passwordError) {
@@ -205,7 +195,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
@@ -216,7 +205,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
-            <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
@@ -228,15 +216,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 {isLoginInProgress ? "Please wait" : "Sign In"}
               </Box>
             </Button>
-            <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
-              variant="body2"
-              sx={{ alignSelf: "center" }}
-            >
-              Forgot your password?
-            </Link>
           </Box>
           <Divider>or</Divider>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -249,6 +228,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               Sign in with Google
             </Button>
             <Button
+              disabled={true}
               fullWidth
               variant="outlined"
               onClick={() => alert("Sign in with Facebook")}
@@ -258,13 +238,14 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             </Button>
             <Typography sx={{ textAlign: "center" }}>
               Don&apos;t have an account?{" "}
-              <Link
-                href="/sign-up"
+              <MuiLink
+                component={RouterLink}
+                to="/sign-up"
                 variant="body2"
                 sx={{ alignSelf: "center" }}
               >
                 Sign up
-              </Link>
+              </MuiLink>
             </Typography>
           </Box>
         </Card>

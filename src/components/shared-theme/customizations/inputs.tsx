@@ -402,24 +402,6 @@ export const inputsCustomizations: Components<Theme> = {
             borderColor: gray[500],
           },
         }),
-        variants: [
-          {
-            props: {
-              size: "small",
-            },
-            style: {
-              height: "2.25rem",
-            },
-          },
-          {
-            props: {
-              size: "medium",
-            },
-            style: {
-              height: "2.5rem",
-            },
-          },
-        ],
       }),
       notchedOutline: {
         border: "none",

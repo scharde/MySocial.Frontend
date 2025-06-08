@@ -70,7 +70,7 @@ const PostComments = (props: Props) => {
 
       let clonedComments = [...comments];
       clonedComments.unshift(response);
-
+      setNewComment("");
       setComments(clonedComments);
       setTotalComments(totalComments + 1);
     } catch (error) {
@@ -118,7 +118,7 @@ const PostComments = (props: Props) => {
             next={fetchMoreComments}
             hasMore={totalComments > comments.length}
             loader={<h4>Loading...</h4>}
-            endMessage={<p>No more posts</p>}
+            endMessage={<p style={{ textAlign: "center" }}>No more comments</p>}
             scrollableTarget="postCommentsContentId"
           >
             {comments.map((comment) => (
@@ -131,7 +131,13 @@ const PostComments = (props: Props) => {
                   {comment.author.name.charAt(0)}
                 </Avatar>
                 <Box>
-                  <Box sx={{ bgcolor: "grey.100", borderRadius: 2, p: 1.5 }}>
+                  <Box
+                    sx={(theme) => ({
+                      borderRadius: 2,
+                      paddingX: 1.5,
+                      paddingBottom: 1.5,
+                    })}
+                  >
                     <Typography variant="subtitle2" fontWeight="bold">
                       {comment.author.name}
                     </Typography>
@@ -154,6 +160,7 @@ const PostComments = (props: Props) => {
         <Button onClick={() => closeDialog()}>Cancel</Button>
         <Button
           onClick={handleAddComment}
+          color="secondary"
           variant="contained"
           disabled={!newComment.trim() || isAddingComment}
         >

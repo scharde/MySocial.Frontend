@@ -111,7 +111,7 @@ export default function SocialFeed() {
         next={fetchMorePosts}
         hasMore={totalCount > posts.length}
         loader={<h4>Loading...</h4>}
-        endMessage={<p>No more posts</p>}
+        endMessage={<p style={{ textAlign: "center" }}>No more posts</p>}
       >
         {posts.map((post) => {
           let isFollowing = followingToIds.includes(post.author?.id);
@@ -233,13 +233,14 @@ export default function SocialFeed() {
                   <IconButton onClick={() => handleOpenComments(post.id)}>
                     <Comment />
                   </IconButton>
-                  <IconButton>
+                  <IconButton disabled>
                     <Share />
                   </IconButton>
-                  <IconButton>
+                  <IconButton disabled>
                     <Send />
                   </IconButton>
                   <IconButton
+                    disabled
                     onClick={() => handleBookmark(post.id)}
                     color={post.userBookmarked ? "primary" : "default"}
                   >
@@ -253,11 +254,7 @@ export default function SocialFeed() {
       </InfiniteScroll>
 
       {/* Post Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
-      >
+      <Menu anchorEl={anchorEl} open={false} onClose={() => setAnchorEl(null)}>
         <MenuItem onClick={() => setAnchorEl(null)}>Save Post</MenuItem>
         <MenuItem onClick={() => setAnchorEl(null)}>Hide Post</MenuItem>
         <MenuItem onClick={() => setAnchorEl(null)}>Report Post</MenuItem>

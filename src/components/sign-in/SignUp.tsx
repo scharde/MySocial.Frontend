@@ -4,7 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
-import Link from "@mui/material/Link";
+import { Link as MuiLink } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
@@ -19,6 +19,7 @@ import React, { useState } from "react";
 import { registerAsync } from "@/services/AuthService";
 import { ISignUpRequest } from "@/model/Auth";
 import { Alert } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -76,15 +77,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [open, setOpen] = React.useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     if (emailError || passwordError) {
@@ -154,6 +146,11 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
         password: password.value,
       } as ISignUpRequest);
       setRegisterStatus("success");
+
+      firstName.value = "";
+      lastName.value = "";
+      email.value = "";
+      password.value = "";
     } catch (e) {
       setRegisterStatus("failed");
     } finally {
@@ -193,7 +190,10 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
           >
             {registerStatus == "success" && (
               <Alert severity="success">
-                User registered. Please <Link href="/sign-in">Sign In</Link>
+                User registered. Please{" "}
+                <MuiLink component={RouterLink} to="/sign-in">
+                  Sign In
+                </MuiLink>
                 &nbsp; to proceed
               </Alert>
             )}
@@ -259,14 +259,12 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
                 color={passwordError ? "error" : "primary"}
               />
             </FormControl>
-            <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
@@ -300,13 +298,14 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             </Button>
             <Typography sx={{ textAlign: "center" }}>
               Already have an account?{" "}
-              <Link
-                href="/sign-in"
+              <MuiLink
+                component={RouterLink}
+                to="/sign-in"
                 variant="body2"
                 sx={{ alignSelf: "center" }}
               >
                 Sign In
-              </Link>
+              </MuiLink>
             </Typography>
           </Box>
         </Card>
